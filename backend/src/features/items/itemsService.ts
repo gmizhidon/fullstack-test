@@ -3,6 +3,22 @@ import type { GetItemsQuery, GetItemsResponse, Item } from 'shared';
 import { decodeItemsCursor, encodeItemsCursor, type ItemsCursor } from './itemsCursor.js';
 import { ItemsStore } from './itemsStore.js';
 import { ApiError } from '../../apiError.js';
+import type { BatchResult } from '../../queue/batchQueue.js';
+
+export type ItemMutation =
+    | {
+          type: 'select';
+          id: Item['id'];
+      }
+    | {
+          type: 'unselect';
+          id: Item['id'];
+      }
+    | {
+          type: 'move';
+          id: Item['id'];
+          beforeId: Item['id'] | null;
+      };
 
 export class ItemsService {
     constructor(private readonly store: ItemsStore) {}
@@ -25,12 +41,50 @@ export class ItemsService {
         };
     }
 
-    addItem(id: Item['id']): void {
-        if (this.store.has(id)) {
-            throw new ApiError('ITEM_ALREADY_EXISTS', `Item "${id}" already exists`);
-        }
+    addItems(ids: Item['id'][]): BatchResult[] {
+        const results = this.store.add(ids);
 
-        this.store.add(id);
+        return results.map(result => {
+            if (result.success) {
+                return {
+                    success: true,
+                };
+            }
+
+            return {
+                success: false,
+                error: new ApiError('ITEM_ALREADY_EXISTS', `Item "${result.id}" already exists`),
+            };
+        });
+    }
+
+    mutateItems(mutations: ItemMutation[]): BatchResult[] {
+        return mutations.map(mutation => {
+            try {
+                switch (mutation.type) {
+                    case 'select':
+                        this.selectItem(mutation.id);
+                        break;
+
+                    case 'unselect':
+                        this.unselectItem(mutation.id);
+                        break;
+
+                    case 'move':
+                        this.moveItem(mutation.id, mutation.beforeId);
+                        break;
+                }
+
+                return {
+                    success: true,
+                };
+            } catch (error) {
+                return {
+                    success: false,
+                    error,
+                };
+            }
+        });
     }
 
     selectItem(id: Item['id']): void {

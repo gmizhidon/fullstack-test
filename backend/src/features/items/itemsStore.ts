@@ -15,6 +15,11 @@ interface AvailableEntry {
     position: number;
 }
 
+interface AddItemResult {
+    id: Item['id'];
+    success: boolean;
+}
+
 export class ItemsStore {
     private readonly customIds: Item['id'][] = [];
     private readonly customIdSet = new Set<Item['id']>();
@@ -24,13 +29,22 @@ export class ItemsStore {
         return this.isBaseItem(id) || this.customIdSet.has(id);
     }
 
-    add(id: Item['id']) {
-        if (this.has(id)) {
+    add(id: Item['id']): boolean;
+    add(ids: Item['id'][]): AddItemResult[];
+    add(idOrIds: Item['id'] | Item['id'][]): boolean | AddItemResult[] {
+        if (Array.isArray(idOrIds)) {
+            return idOrIds.map(id => ({
+                id,
+                success: this.add(id),
+            }));
+        }
+
+        if (this.has(idOrIds)) {
             return false;
         }
 
-        this.customIds.push(id);
-        this.customIdSet.add(id);
+        this.customIds.push(idOrIds);
+        this.customIdSet.add(idOrIds);
 
         return true;
     }

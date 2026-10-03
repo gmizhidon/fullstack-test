@@ -1,30 +1,45 @@
 import type { NextFunction, Request, Response } from 'express';
-import { createItemSchema, getItemsQuerySchema, moveItemSchema, updateItemSchema } from 'shared';
+import {
+    createItemSchema,
+    GetItemsQuery,
+    getItemsQuerySchema,
+    GetItemsResponse,
+    Item,
+    moveItemSchema,
+    updateItemSchema,
+} from 'shared';
 
-import { ItemsService } from './itemsService.js';
+import { ItemMutation } from './itemsService.js';
+import { BatchQueue } from '../../queue/batchQueue.js';
+import { ReadQueue } from '../../queue/readQueue.js';
 
 interface ItemParams {
     id: string;
 }
 
 export class ItemsController {
-    constructor(private readonly service: ItemsService) {}
+    constructor(
+        private readonly createQueue: BatchQueue<Item['id']>,
+        private readonly mutationQueue: BatchQueue<ItemMutation>,
+        private readonly readQueue: ReadQueue<GetItemsQuery, GetItemsResponse>,
+    ) {}
 
-    getItems = (req: Request, res: Response, next: NextFunction) => {
+    getItems = async (req: Request, res: Response, next: NextFunction) => {
         try {
             const query = getItemsQuerySchema.parse(req.query);
+            const result = await this.readQueue.enqueue(query);
 
-            res.json(this.service.getItems(query));
+            res.json(result);
         } catch (error) {
             next(error);
         }
     };
 
-    addItem = (req: Request, res: Response, next: NextFunction) => {
+    addItem = async (req: Request, res: Response, next: NextFunction) => {
         try {
             const { id } = createItemSchema.parse(req.body);
 
-            this.service.addItem(id);
+            await this.createQueue.enqueue(id);
 
             res.status(201).json({ id });
         } catch (error) {
@@ -32,16 +47,15 @@ export class ItemsController {
         }
     };
 
-    updateItem = (req: Request<ItemParams>, res: Response, next: NextFunction) => {
+    updateItem = async (req: Request<ItemParams>, res: Response, next: NextFunction) => {
         try {
             const { id } = req.params;
             const { selected } = updateItemSchema.parse(req.body);
 
-            if (selected) {
-                this.service.selectItem(id);
-            } else {
-                this.service.unselectItem(id);
-            }
+            await this.mutationQueue.enqueue({
+                type: selected ? 'select' : 'unselect',
+                id,
+            });
 
             res.sendStatus(204);
         } catch (error) {
@@ -49,12 +63,16 @@ export class ItemsController {
         }
     };
 
-    moveItem = (req: Request<ItemParams>, res: Response, next: NextFunction) => {
+    moveItem = async (req: Request<ItemParams>, res: Response, next: NextFunction) => {
         try {
             const { id } = req.params;
             const { beforeId } = moveItemSchema.parse(req.body);
 
-            this.service.moveItem(id, beforeId);
+            await this.mutationQueue.enqueue({
+                type: 'move',
+                id,
+                beforeId,
+            });
 
             res.sendStatus(204);
         } catch (error) {
