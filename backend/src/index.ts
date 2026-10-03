@@ -1,17 +1,9 @@
-import express from 'express';
-
-const app = express();
-
-app.use(express.json());
-
-app.get('/api/health', (_req, res) => {
-    res.json({
-        status: 'ok',
-    });
-});
+import { createApp } from './app.js';
 
 const PORT = 3000;
 
+const app = createApp();
+
 app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
+    console.log(`Server started on port ${PORT}`);
 });

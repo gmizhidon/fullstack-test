@@ -11,8 +11,11 @@
             "import": "./dist/index.js"
         }
     },
-     "scripts": {
+    "scripts": {
         "dev": "tsc -p tsconfig.json --watch",
         "build": "tsc -p tsconfig.json"
+    },
+    "dependencies": {
+        "zod": "^4.6.5"
     }
 }

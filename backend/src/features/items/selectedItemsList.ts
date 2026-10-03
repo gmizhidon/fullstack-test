@@ -101,6 +101,15 @@ export class SelectedItemsList {
         }
     }
 
+    *iterateFrom(id: Item['id'] | null): IterableIterator<Item['id']> {
+        let current = id === null ? this.head : this.nodes.get(id);
+
+        while (current) {
+            yield current.id;
+            current = current.next;
+        }
+    }
+
     private detach(node: ListNode): void {
         if (node.prev) {
             node.prev.next = node.next;

@@ -1,4 +1,5 @@
 export type ApiErrorCode =
+    | 'INVALID_REQUEST'
     | 'INVALID_ID'
     | 'ITEM_NOT_FOUND'
     | 'ITEM_ALREADY_EXISTS'
