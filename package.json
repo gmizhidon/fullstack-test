@@ -12,7 +12,9 @@
         "lint": "oxlint frontend backend shared",
         "lint:fix": "oxlint frontend backend shared --fix",
         "format": "prettier --write .",
-        "format:check": "prettier --check ."
+        "format:check": "prettier --check .",
+        "test": "npm run test -w backend",
+        "test:watch": "npm run test:watch -w backend"
     },
     "devDependencies": {
         "concurrently": "^9",
