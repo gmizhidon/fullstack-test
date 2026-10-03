@@ -1,0 +1,23 @@
+{
+    "name": "fullstack-test-task",
+    "private": true,
+    "workspaces": [
+        "frontend",
+        "backend",
+        "shared"
+    ],
+    "scripts": {
+        "dev": "concurrently \"npm run dev -w shared\" \"npm run dev -w backend\" \"npm run dev -w frontend\"",
+        "build": "npm run build -w shared && npm run build -w backend && npm run build -w frontend",
+        "lint": "oxlint frontend backend shared",
+        "lint:fix": "oxlint frontend backend shared --fix",
+        "format": "prettier --write .",
+        "format:check": "prettier --check ."
+    },
+    "devDependencies": {
+        "concurrently": "^9",
+        "oxlint": "^1.86.0",
+        "prettier": "^3.9.9",
+        "typescript": "~7.0.2"
+    }
+}
