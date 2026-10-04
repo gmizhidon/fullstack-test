@@ -19,25 +19,13 @@
     width: 100%;
 }
 
-.loader {
-    position: sticky;
-    bottom: 0;
-
-    padding: var(--spacing-sm);
-
-    color: var(--color-text-secondary);
-    text-align: center;
-
-    background: var(--color-surface);
-}
-
 .status {
     position: sticky;
     bottom: 0;
 
     padding: var(--spacing-sm);
 
-    color: var(--color-danger);
+    color: var(--color-text-secondary);
     text-align: center;
 
     background: var(--color-surface);

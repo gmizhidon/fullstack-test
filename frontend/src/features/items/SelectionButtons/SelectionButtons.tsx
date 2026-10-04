@@ -23,7 +23,6 @@ export function SelectionButtons() {
             >
                 →
             </Button>
-
             <Button
                 aria-label="Unselect items"
                 disabled={selectedSelection.size === 0 || isPending}

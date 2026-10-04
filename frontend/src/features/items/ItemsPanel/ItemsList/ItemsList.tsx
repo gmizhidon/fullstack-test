@@ -1,19 +1,18 @@
-import { useVirtualizer } from '@tanstack/react-virtual';
-import { useEffect, useRef } from 'react';
+import type { VirtualItem } from '@tanstack/react-virtual';
+import { type DragEndEvent } from '@dnd-kit/core';
+import { arrayMove } from '@dnd-kit/sortable';
 
 import { ApiErrorMessage } from '@/shared/ui/ApiErrorMessage/ApiErrorMessage';
 
 import type { ItemsPanelType } from '../../useItemsStore';
-import { ItemCard } from './ItemCard/ItemCard';
+import { ItemCard } from './Item/ItemCard';
+import { Item } from './Item/Item';
 import { useItems } from './useItems';
+import { useItemsVirtualizer } from './useItemsVirtualizer';
+import { SortableItems } from './SortableItems';
+import { useReorderItem } from './useReorderItem';
 
 import styles from './ItemsList.module.scss';
-
-const ESTIMATED_ITEM_SIZE = 40;
-const ITEM_GAP = 8;
-const OVERSCAN = 3;
-const LOAD_MORE_THRESHOLD = 5;
-const FILTERED_ITEMS_LIMIT = 20;
 
 interface ItemsListProps {
     type: ItemsPanelType;
@@ -21,84 +20,102 @@ interface ItemsListProps {
 }
 
 export function ItemsList({ type, filter }: ItemsListProps) {
-    const listRef = useRef<HTMLDivElement>(null);
+    const { items, error, isPending, isError, hasNextPage, fetchNextPage, isFetchingNextPage, isFetchNextPageError } =
+        useItems({
+            type,
+            filter,
+        });
 
-    const {
-        items,
-        error,
-        isPending,
-        isError,
-        hasNextPage,
-        fetchNextPage,
-        isFetchingNextPage,
-        isFetchNextPageError,
-        fetchNextPageError,
-    } = useItems({ type, filter });
+    const reorderMutation = useReorderItem();
 
     const isFiltered = filter.length > 0;
 
-    const virtualizer = useVirtualizer({
+    const { listRef, virtualizer, virtualItems, filteredMaxHeight } = useItemsVirtualizer({
         count: items.length,
-        getScrollElement: () => listRef.current,
-        estimateSize: () => ESTIMATED_ITEM_SIZE,
-        gap: ITEM_GAP,
-        overscan: isFiltered ? 0 : OVERSCAN,
+        isFiltered,
+        hasNextPage,
+        isFetchingNextPage,
+        fetchNextPage,
     });
 
-    useEffect(() => {
-        virtualizer.scrollToOffset(0);
-    }, [filter, virtualizer]);
-
-    const virtualItems = virtualizer.getVirtualItems();
-
-    const measuredItemSize = virtualItems[0]?.size ?? ESTIMATED_ITEM_SIZE;
-
-    const filteredMaxHeight = measuredItemSize * FILTERED_ITEMS_LIMIT + ITEM_GAP * (FILTERED_ITEMS_LIMIT - 1);
-
-    useEffect(() => {
-        const lastItem = virtualItems.at(-1);
-
-        if (!lastItem) {
-            return;
-        }
-
-        const isNearEnd = lastItem.index >= items.length - LOAD_MORE_THRESHOLD;
-
-        if (isNearEnd && hasNextPage && !isFetchingNextPage) {
-            fetchNextPage();
-        }
-    }, [virtualItems, items.length, hasNextPage, isFetchingNextPage, fetchNextPage]);
-
     if (isPending) {
-        return <div>Loading...</div>;
+        return <div className={styles.status}>Loading...</div>;
     }
 
     if (isError) {
         return <ApiErrorMessage error={error} fallback="Failed to load items" />;
     }
+
+    let virtualList = (
+        <div
+            className={styles.virtualList}
+            style={{
+                height: virtualizer.getTotalSize(),
+            }}
+        >
+            {virtualItems.map(renderVirtualItem)}
+        </div>
+    );
+
+    if (type === 'selected') {
+        virtualList = (
+            <SortableItems
+                ids={items.map(item => item.id)}
+                onDragEnd={handleDragEnd}
+                renderOverlay={id => <ItemCard item={{ id }} type="selected" />}
+            >
+                {virtualList}
+            </SortableItems>
+        );
+    }
+
     return (
         <div ref={listRef} className={styles.list} style={{ maxHeight: isFiltered ? filteredMaxHeight : undefined }}>
-            <div className={styles.virtualList} style={{ height: virtualizer.getTotalSize() }}>
-                {virtualItems.map(virtualItem => {
-                    const item = items[virtualItem.index]!;
-
-                    return (
-                        <div
-                            key={virtualItem.key}
-                            ref={virtualizer.measureElement}
-                            data-index={virtualItem.index}
-                            className={styles.virtualItem}
-                            style={{ transform: `translateY(${virtualItem.start}px)` }}
-                        >
-                            <ItemCard item={item} type={type} />
-                        </div>
-                    );
-                })}
-            </div>
-            {isFetchingNextPage && <div className={styles.loader}>Loading...</div>}
+            {virtualList}
+            {isFetchingNextPage && <div className={styles.status}>Loading...</div>}
             {isFetchNextPageError && (
-                <ApiErrorMessage error={fetchNextPageError} fallback="Failed to load more items" />
+                <div className={styles.status}>
+                    <ApiErrorMessage error={error} fallback="Failed to load more items" />
+                </div>
             )}
         </div>
     );
+
+    function renderVirtualItem(virtualItem: VirtualItem) {
+        const item = items[virtualItem.index]!;
+
+        return (
+            <div
+                key={virtualItem.key}
+                ref={virtualizer.measureElement}
+                data-index={virtualItem.index}
+                className={styles.virtualItem}
+                style={{ transform: `translateY(${virtualItem.start}px)` }}
+            >
+                <Item item={item} type={type} />
+            </div>
+        );
+    }
+
+    function handleDragEnd({ active, over }: DragEndEvent) {
+        if (!over || active.id === over.id || reorderMutation.isPending) {
+            return;
+        }
+
+        const oldIndex = items.findIndex(item => item.id === active.id);
+        const newIndex = items.findIndex(item => item.id === over.id);
+
+        if (oldIndex === -1 || newIndex === -1) {
+            return;
+        }
+
+        const reorderedItems = arrayMove(items, oldIndex, newIndex);
+        const movedIndex = reorderedItems.findIndex(item => item.id === active.id);
+        const beforeId = reorderedItems[movedIndex + 1]?.id ?? null;
+
+        reorderMutation.mutate({
+            id: String(active.id),
+            beforeId,
+        });
+    }
 }

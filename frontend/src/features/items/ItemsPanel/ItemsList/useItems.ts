@@ -70,6 +70,5 @@ export function useItems({ type, filter }: UseItemsOptions) {
         fetchNextPage: query.fetchNextPage,
         isFetchingNextPage: query.isFetchingNextPage,
         isFetchNextPageError: query.isFetchNextPageError,
-        fetchNextPageError: query.isFetchNextPageError ? query.error : null,
     };
 }
