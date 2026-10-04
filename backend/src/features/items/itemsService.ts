@@ -92,19 +92,19 @@ export class ItemsService {
             throw new ApiError('ITEM_NOT_FOUND', `Item "${id}" not found`);
         }
 
-        if (this.store.isSelected(id)) {
-            throw new ApiError('ITEM_ALREADY_SELECTED', `Item "${id}" is already selected`);
+        if (!this.store.isSelected(id)) {
+            this.store.select(id);
         }
-
-        this.store.select(id);
     }
 
     unselectItem(id: Item['id']): void {
-        if (!this.store.isSelected(id)) {
-            throw new ApiError('ITEM_NOT_SELECTED', `Item "${id}" is not selected`);
+        if (!this.store.has(id)) {
+            throw new ApiError('ITEM_NOT_FOUND', `Item "${id}" not found`);
         }
 
-        this.store.unselect(id);
+        if (this.store.isSelected(id)) {
+            this.store.unselect(id);
+        }
     }
 
     moveItem(id: Item['id'], beforeId: Item['id'] | null): void {
