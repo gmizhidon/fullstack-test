@@ -50,7 +50,12 @@ export function useItems({ type, filter }: UseItemsOptions) {
     }
 
     return {
-        ...query,
         items,
+        isPending: query.isPending,
+        isError: query.isError,
+        hasNextPage: query.hasNextPage,
+        fetchNextPage: query.fetchNextPage,
+        isFetchingNextPage: query.isFetchingNextPage,
+        isFetchNextPageError: query.isFetchNextPageError,
     };
 }

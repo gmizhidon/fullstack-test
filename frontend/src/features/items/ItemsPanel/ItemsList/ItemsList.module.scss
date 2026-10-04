@@ -1,9 +1,44 @@
 .list {
-    display: flex;
     flex: 1;
-    flex-direction: column;
-    gap: var(--spacing-sm);
 
     min-height: 0;
     overflow-y: auto;
+}
+
+.virtualList {
+    position: relative;
+
+    width: 100%;
+}
+
+.virtualItem {
+    position: absolute;
+    top: 0;
+    left: 0;
+
+    width: 100%;
+}
+
+.loader {
+    position: sticky;
+    bottom: 0;
+
+    padding: var(--spacing-sm);
+
+    color: var(--color-text-secondary);
+    text-align: center;
+
+    background: var(--color-surface);
+}
+
+.status {
+    position: sticky;
+    bottom: 0;
+
+    padding: var(--spacing-sm);
+
+    color: var(--color-danger);
+    text-align: center;
+
+    background: var(--color-surface);
 }

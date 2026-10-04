@@ -25,28 +25,33 @@ export interface OptimisticMove {
 export const useItemsStore = create<ItemsState>(set => {
     const createPanelState = (type: ItemsPanelType): PanelState => ({
         selection: new Set(),
-        toggle: id => set(state => {
-            const selection = new Set(state[type].selection);
+        toggle: id =>
+            set(state => {
+                const selection = new Set(state[type].selection);
 
-            if (selection.has(id)) {
-                selection.delete(id);
-            } else {
-                selection.add(id);
-            }
+                if (selection.has(id)) {
+                    selection.delete(id);
+                } else {
+                    selection.add(id);
+                }
 
-            return {
-                [type]: {
-                    ...state[type],
-                    selection,
-                },
-            } as Pick<ItemsState, ItemsPanelType>;
-        }),
-        clear: () => set(state =>({
-            [type]: {
-                ...state[type],
-                selection: new Set(),
-            },
-        }) as Pick<ItemsState, ItemsPanelType>),
+                return {
+                    [type]: {
+                        ...state[type],
+                        selection,
+                    },
+                } as Pick<ItemsState, ItemsPanelType>;
+            }),
+        clear: () =>
+            set(
+                state =>
+                    ({
+                        [type]: {
+                            ...state[type],
+                            selection: new Set(),
+                        },
+                    }) as Pick<ItemsState, ItemsPanelType>,
+            ),
     });
 
     return {
