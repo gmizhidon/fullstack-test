@@ -14,7 +14,7 @@ interface ItemsState {
     selected: PanelState;
     optimisticMove: OptimisticMove | null;
     setOptimisticMove: (move: OptimisticMove | null) => void;
-    clearAll: () => void;
+    clearSelections: () => void;
     optimisticAddedIds: Set<Item['id']>;
     addOptimisticItem: (id: Item['id']) => void;
     removeOptimisticItem: (id: Item['id']) => void;
@@ -26,73 +26,58 @@ export interface OptimisticMove {
 }
 
 export const useItemsStore = create<ItemsState>(set => {
-    const createPanelState = (type: ItemsPanelType): PanelState => ({
-        selection: new Set(),
-        toggle: id =>
-            set(state => {
-                const selection = new Set(state[type].selection);
-
-                if (selection.has(id)) {
-                    selection.delete(id);
-                } else {
-                    selection.add(id);
-                }
-
-                return {
-                    [type]: {
-                        ...state[type],
-                        selection,
-                    },
-                } as Pick<ItemsState, ItemsPanelType>;
-            }),
-        clear: () =>
-            set(
-                state =>
-                    ({
-                        [type]: {
-                            ...state[type],
-                            selection: new Set(),
-                        },
-                    }) as Pick<ItemsState, ItemsPanelType>,
-            ),
-    });
-
     return {
         available: createPanelState('available'),
         selected: createPanelState('selected'),
         optimisticMove: null,
         setOptimisticMove: optimisticMove => set({ optimisticMove }),
-        clearAll: () =>
-            set(state => ({
-                available: {
-                    ...state.available,
-                    selection: new Set(),
-                },
-                selected: {
-                    ...state.selected,
-                    selection: new Set(),
-                },
-            })),
+        clearSelections,
         optimisticAddedIds: new Set(),
-        addOptimisticItem: id =>
-            set(state => {
-                const optimisticAddedIds = new Set(state.optimisticAddedIds);
-
-                optimisticAddedIds.add(id);
-
-                return {
-                    optimisticAddedIds,
-                };
-            }),
-        removeOptimisticItem: id =>
-            set(state => {
-                const optimisticAddedIds = new Set(state.optimisticAddedIds);
-
-                optimisticAddedIds.delete(id);
-
-                return {
-                    optimisticAddedIds,
-                };
-            }),
+        addOptimisticItem,
+        removeOptimisticItem,
     };
+
+    function createPanelState(type: ItemsPanelType): PanelState {
+        return {
+            selection: new Set(),
+            toggle: id =>
+                set(state => {
+                    const selection = new Set(state[type].selection);
+
+                    if (selection.has(id)) {
+                        selection.delete(id);
+                    } else {
+                        selection.add(id);
+                    }
+
+                    return { [type]: { ...state[type], selection } };
+                }),
+            clear: () => set(state => ({ [type]: { ...state[type], selection: new Set() } })),
+        };
+    }
+
+    function clearSelections() {
+        set(state => ({
+            available: { ...state.available, selection: new Set() },
+            selected: { ...state.selected, selection: new Set() },
+        }));
+    }
+
+    function addOptimisticItem(id: Item['id']) {
+        set(state => {
+            const optimisticAddedIds = new Set(state.optimisticAddedIds);
+            optimisticAddedIds.add(id);
+
+            return { optimisticAddedIds };
+        });
+    }
+
+    function removeOptimisticItem(id: Item['id']) {
+        set(state => {
+            const optimisticAddedIds = new Set(state.optimisticAddedIds);
+            optimisticAddedIds.delete(id);
+
+            return { optimisticAddedIds };
+        });
+    }
 });

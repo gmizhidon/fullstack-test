@@ -1,6 +1,4 @@
 import type { VirtualItem } from '@tanstack/react-virtual';
-import { type DragEndEvent } from '@dnd-kit/core';
-import { arrayMove } from '@dnd-kit/sortable';
 
 import { ApiErrorMessage } from '@/shared/ui/ApiErrorMessage/ApiErrorMessage';
 
@@ -10,7 +8,7 @@ import { Item } from './Item/Item';
 import { useItems } from './useItems';
 import { useItemsVirtualizer } from './useItemsVirtualizer';
 import { SortableItems } from './SortableItems';
-import { useReorderItem } from './useReorderItem';
+import { useItemsReorder } from './useItemsReorder';
 
 import styles from './ItemsList.module.scss';
 
@@ -25,13 +23,12 @@ export function ItemsList({ type, filter }: ItemsListProps) {
             type,
             filter,
         });
-
-    const reorderMutation = useReorderItem();
+    const { items: displayedItems, handleDragEnd, error: reorderError } = useItemsReorder(items);
 
     const isFiltered = filter.length > 0;
 
     const { listRef, virtualizer, virtualItems, filteredMaxHeight } = useItemsVirtualizer({
-        count: items.length,
+        count: displayedItems.length,
         isFiltered,
         hasNextPage,
         isFetchingNextPage,
@@ -47,12 +44,7 @@ export function ItemsList({ type, filter }: ItemsListProps) {
     }
 
     let virtualList = (
-        <div
-            className={styles.virtualList}
-            style={{
-                height: virtualizer.getTotalSize(),
-            }}
-        >
+        <div className={styles.virtualList} style={{ height: virtualizer.getTotalSize() }}>
             {virtualItems.map(renderVirtualItem)}
         </div>
     );
@@ -60,7 +52,7 @@ export function ItemsList({ type, filter }: ItemsListProps) {
     if (type === 'selected') {
         virtualList = (
             <SortableItems
-                ids={items.map(item => item.id)}
+                ids={displayedItems.map(item => item.id)}
                 onDragEnd={handleDragEnd}
                 renderOverlay={id => <ItemCard item={{ id }} type="selected" />}
             >
@@ -78,11 +70,16 @@ export function ItemsList({ type, filter }: ItemsListProps) {
                     <ApiErrorMessage error={error} fallback="Failed to load more items" />
                 </div>
             )}
+            {reorderError && (
+                <div className={styles.status}>
+                    <ApiErrorMessage error={reorderError} fallback="Failed to reorder item" />
+                </div>
+            )}
         </div>
     );
 
     function renderVirtualItem(virtualItem: VirtualItem) {
-        const item = items[virtualItem.index]!;
+        const item = displayedItems[virtualItem.index]!;
 
         return (
             <div
@@ -95,27 +92,5 @@ export function ItemsList({ type, filter }: ItemsListProps) {
                 <Item item={item} type={type} />
             </div>
         );
-    }
-
-    function handleDragEnd({ active, over }: DragEndEvent) {
-        if (!over || active.id === over.id || reorderMutation.isPending) {
-            return;
-        }
-
-        const oldIndex = items.findIndex(item => item.id === active.id);
-        const newIndex = items.findIndex(item => item.id === over.id);
-
-        if (oldIndex === -1 || newIndex === -1) {
-            return;
-        }
-
-        const reorderedItems = arrayMove(items, oldIndex, newIndex);
-        const movedIndex = reorderedItems.findIndex(item => item.id === active.id);
-        const beforeId = reorderedItems[movedIndex + 1]?.id ?? null;
-
-        reorderMutation.mutate({
-            id: String(active.id),
-            beforeId,
-        });
     }
 }

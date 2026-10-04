@@ -11,7 +11,12 @@ export function useMoveItems() {
     const moveItems = async (ids: Set<Item['id']>, selected: boolean) => {
         const movedIds = new Set(ids);
 
-        const { available, selected: selectedPanel, setOptimisticMove, clearAll } = useItemsStore.getState();
+        const {
+            available,
+            selected: selectedPanel,
+            setOptimisticMove,
+            clearSelections: clearAll,
+        } = useItemsStore.getState();
 
         setOptimisticMove({
             ids: movedIds,
