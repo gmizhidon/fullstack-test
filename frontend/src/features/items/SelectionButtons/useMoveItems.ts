@@ -17,7 +17,6 @@ export function useMoveItems() {
             selected: selectedPanel,
             setOptimisticMoves,
             clearOptimisticMoves,
-            clearSelections,
         } = useItemsStore.getState();
 
         setOptimisticMoves(movedIds, target);
@@ -30,13 +29,13 @@ export function useMoveItems() {
 
         try {
             await Promise.all([...movedIds].map(id => updateItem(id, { selected })));
-
+        } catch {
+            // Error is resolved by refetching server state.
+        } finally {
             await queryClient.invalidateQueries({
                 queryKey: itemsQueryKeys.all,
             });
-        } catch {
-            clearSelections();
-        } finally {
+
             clearOptimisticMoves(movedIds, target);
         }
     };

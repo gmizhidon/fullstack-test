@@ -37,7 +37,6 @@ function getStatusCode(code: ApiError['code']) {
             return 404;
 
         case 'ITEM_ALREADY_EXISTS':
-        case 'ITEM_ALREADY_SELECTED':
         case 'ITEM_NOT_SELECTED':
             return 409;
 

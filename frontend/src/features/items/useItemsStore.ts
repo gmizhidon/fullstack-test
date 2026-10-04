@@ -15,7 +15,6 @@ interface ItemsState {
     optimisticMoves: Map<Item['id'], ItemsPanelType>;
     setOptimisticMoves: (ids: Set<Item['id']>, target: ItemsPanelType) => void;
     clearOptimisticMoves: (ids: Set<Item['id']>, target: ItemsPanelType) => void;
-    clearSelections: () => void;
     optimisticAddedIds: Set<Item['id']>;
     addOptimisticItem: (id: Item['id']) => void;
     removeOptimisticItem: (id: Item['id']) => void;
@@ -28,7 +27,6 @@ export const useItemsStore = create<ItemsState>(set => {
         optimisticMoves: new Map(),
         setOptimisticMoves,
         clearOptimisticMoves,
-        clearSelections,
         optimisticAddedIds: new Set(),
         addOptimisticItem,
         removeOptimisticItem,
@@ -77,13 +75,6 @@ export const useItemsStore = create<ItemsState>(set => {
 
             return { optimisticMoves };
         });
-    }
-
-    function clearSelections() {
-        set(state => ({
-            available: { ...state.available, selection: new Set() },
-            selected: { ...state.selected, selection: new Set() },
-        }));
     }
 
     function addOptimisticItem(id: Item['id']) {
