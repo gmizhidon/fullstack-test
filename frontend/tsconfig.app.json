@@ -26,6 +26,9 @@
         "strict": true,
         "noUncheckedIndexedAccess": true,
         "noImplicitOverride": true,
+        "paths": {
+            "@/*": ["./src/*"],
+        },
     },
     "include": ["src"],
 }

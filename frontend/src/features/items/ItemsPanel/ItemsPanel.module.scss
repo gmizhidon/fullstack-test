@@ -1,0 +1,22 @@
+.panel {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: var(--spacing-md);
+
+    min-width: 0;
+    min-height: 0;
+    padding: var(--spacing-md);
+
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+}
+
+.title {
+    margin: 0;
+
+    font-size: var(--font-size-lg);
+    font-weight: 600;
+}

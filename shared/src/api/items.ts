@@ -26,6 +26,7 @@ export const createItemSchema = z.object({
 });
 
 export type CreateItemRequest = z.infer<typeof createItemSchema>;
+export type CreateItemResponse = Item;
 
 export const updateItemSchema = z.object({
     selected: z.boolean(),

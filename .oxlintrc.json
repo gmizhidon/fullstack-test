@@ -13,9 +13,10 @@
         "import/no-unassigned-import": [
             "warn",
             {
-                "allow": ["**/*.css"]
+                "allow": ["**/*.css", "**/*.scss"]
             }
-        ]
+        ],
+        "import/first": ["error", "absolute-first"]
     },
     "ignorePatterns": ["**/node_modules/**", "**/dist/**", "**/coverage/**"]
 }

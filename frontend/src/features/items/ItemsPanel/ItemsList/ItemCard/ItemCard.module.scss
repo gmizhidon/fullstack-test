@@ -1,0 +1,33 @@
+.card {
+    width: 100%;
+    padding: var(--spacing-sm) var(--spacing-md);
+
+    color: var(--color-text);
+    text-align: left;
+
+    background: var(--color-background);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+
+    cursor: pointer;
+
+    transition:
+        color 150ms ease,
+        background 150ms ease,
+        border-color 150ms ease;
+
+    &:hover {
+        background: var(--color-surface-hover);
+    }
+}
+
+.selected {
+    color: var(--color-selected-text);
+
+    background: var(--color-selected);
+    border-color: var(--color-selected-border);
+
+    &:hover {
+        background: var(--color-selected-hover);
+    }
+}

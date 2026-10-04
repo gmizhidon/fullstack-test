@@ -1,0 +1,26 @@
+.page {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-lg);
+
+    width: 100%;
+    max-width: 75rem;
+    height: 100vh;
+    margin: 0 auto;
+    padding: var(--spacing-xl);
+}
+
+.title {
+    margin: 0;
+
+    font-size: var(--font-size-xl);
+    line-height: 1.25;
+}
+
+.panels {
+    display: flex;
+    flex: 1;
+    gap: var(--spacing-lg);
+
+    min-height: 0;
+}
