@@ -15,6 +15,9 @@ interface ItemsState {
     optimisticMove: OptimisticMove | null;
     setOptimisticMove: (move: OptimisticMove | null) => void;
     clearAll: () => void;
+    optimisticAddedIds: Set<Item['id']>;
+    addOptimisticItem: (id: Item['id']) => void;
+    removeOptimisticItem: (id: Item['id']) => void;
 }
 
 export interface OptimisticMove {
@@ -70,5 +73,26 @@ export const useItemsStore = create<ItemsState>(set => {
                     selection: new Set(),
                 },
             })),
+        optimisticAddedIds: new Set(),
+        addOptimisticItem: id =>
+            set(state => {
+                const optimisticAddedIds = new Set(state.optimisticAddedIds);
+
+                optimisticAddedIds.add(id);
+
+                return {
+                    optimisticAddedIds,
+                };
+            }),
+        removeOptimisticItem: id =>
+            set(state => {
+                const optimisticAddedIds = new Set(state.optimisticAddedIds);
+
+                optimisticAddedIds.delete(id);
+
+                return {
+                    optimisticAddedIds,
+                };
+            }),
     };
 });

@@ -16,7 +16,8 @@
                 "allow": ["**/*.css", "**/*.scss"]
             }
         ],
-        "import/first": ["error", "absolute-first"]
+        "import/first": ["error", "absolute-first"],
+        "react-hooks/incompatible-library": "off"
     },
     "ignorePatterns": ["**/node_modules/**", "**/dist/**", "**/coverage/**"]
 }

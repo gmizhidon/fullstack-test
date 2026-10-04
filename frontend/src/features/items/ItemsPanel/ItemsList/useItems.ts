@@ -11,6 +11,7 @@ interface UseItemsOptions {
 
 export function useItems({ type, filter }: UseItemsOptions) {
     const optimisticMove = useItemsStore(state => state.optimisticMove);
+    const optimisticAddedIds = useItemsStore(state => state.optimisticAddedIds);
 
     const selected = type === 'selected';
 
@@ -34,6 +35,17 @@ export function useItems({ type, filter }: UseItemsOptions) {
 
     let items = serverItems;
 
+    if (type === 'available') {
+        const existingIds = new Set(items.map(item => item.id));
+
+        const optimisticItems = [...optimisticAddedIds]
+            .filter(id => !filter || id.includes(filter))
+            .filter(id => !existingIds.has(id))
+            .map(id => ({ id }));
+
+        items = [...items, ...optimisticItems];
+    }
+
     if (isMovingOut) {
         items = items.filter(item => !optimisticMove.ids.has(item.id));
     }
@@ -51,11 +63,13 @@ export function useItems({ type, filter }: UseItemsOptions) {
 
     return {
         items,
+        error: query.error,
         isPending: query.isPending,
         isError: query.isError,
         hasNextPage: query.hasNextPage,
         fetchNextPage: query.fetchNextPage,
         isFetchingNextPage: query.isFetchingNextPage,
         isFetchNextPageError: query.isFetchNextPageError,
+        fetchNextPageError: query.isFetchNextPageError ? query.error : null,
     };
 }

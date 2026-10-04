@@ -1,6 +1,8 @@
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { useEffect, useRef } from 'react';
 
+import { ApiErrorMessage } from '@/shared/ui/ApiErrorMessage/ApiErrorMessage';
+
 import type { ItemsPanelType } from '../../useItemsStore';
 import { ItemCard } from './ItemCard/ItemCard';
 import { useItems } from './useItems';
@@ -21,7 +23,17 @@ interface ItemsListProps {
 export function ItemsList({ type, filter }: ItemsListProps) {
     const listRef = useRef<HTMLDivElement>(null);
 
-    const { items, isPending, isError, hasNextPage, fetchNextPage, isFetchingNextPage, isFetchNextPageError, } = useItems({ type, filter });
+    const {
+        items,
+        error,
+        isPending,
+        isError,
+        hasNextPage,
+        fetchNextPage,
+        isFetchingNextPage,
+        isFetchNextPageError,
+        fetchNextPageError,
+    } = useItems({ type, filter });
 
     const isFiltered = filter.length > 0;
 
@@ -32,6 +44,10 @@ export function ItemsList({ type, filter }: ItemsListProps) {
         gap: ITEM_GAP,
         overscan: isFiltered ? 0 : OVERSCAN,
     });
+
+    useEffect(() => {
+        virtualizer.scrollToOffset(0);
+    }, [filter, virtualizer]);
 
     const virtualItems = virtualizer.getVirtualItems();
 
@@ -58,9 +74,8 @@ export function ItemsList({ type, filter }: ItemsListProps) {
     }
 
     if (isError) {
-        return <div>Failed to load items</div>;
+        return <ApiErrorMessage error={error} fallback="Failed to load items" />;
     }
-
     return (
         <div ref={listRef} className={styles.list} style={{ maxHeight: isFiltered ? filteredMaxHeight : undefined }}>
             <div className={styles.virtualList} style={{ height: virtualizer.getTotalSize() }}>
@@ -81,7 +96,9 @@ export function ItemsList({ type, filter }: ItemsListProps) {
                 })}
             </div>
             {isFetchingNextPage && <div className={styles.loader}>Loading...</div>}
-            {isFetchNextPageError && <div className={styles.status}>Failed to load more items</div>}
+            {isFetchNextPageError && (
+                <ApiErrorMessage error={fetchNextPageError} fallback="Failed to load more items" />
+            )}
         </div>
     );
 }

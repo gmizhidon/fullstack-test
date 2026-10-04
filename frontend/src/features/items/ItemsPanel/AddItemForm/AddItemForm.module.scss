@@ -1,0 +1,9 @@
+.form {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: var(--spacing-sm);
+}
+
+.error {
+    grid-column: 1 / -1;
+}
