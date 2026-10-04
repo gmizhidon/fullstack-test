@@ -10,7 +10,7 @@ interface UseItemsOptions {
 }
 
 export function useItems({ type, filter }: UseItemsOptions) {
-    const optimisticMove = useItemsStore(state => state.optimisticMove);
+    const optimisticMoves = useItemsStore(state => state.optimisticMoves);
     const optimisticAddedIds = useItemsStore(state => state.optimisticAddedIds);
 
     const selected = type === 'selected';
@@ -29,10 +29,6 @@ export function useItems({ type, filter }: UseItemsOptions) {
 
     const serverItems = query.data?.pages.flatMap(page => page.items) ?? [];
 
-    const isMovingIn = optimisticMove?.selected === selected;
-
-    const isMovingOut = optimisticMove !== null && optimisticMove.selected !== selected;
-
     let items = serverItems;
 
     if (type === 'available') {
@@ -46,20 +42,22 @@ export function useItems({ type, filter }: UseItemsOptions) {
         items = [...items, ...optimisticItems];
     }
 
-    if (isMovingOut) {
-        items = items.filter(item => !optimisticMove.ids.has(item.id));
-    }
+    items = items.filter(item => {
+        const target = optimisticMoves.get(item.id);
 
-    if (isMovingIn) {
-        const existingIds = new Set(items.map(item => item.id));
+        return !target || target === type;
+    });
 
-        const optimisticItems = [...optimisticMove.ids]
-            .filter(id => !filter || id.includes(filter))
-            .filter(id => !existingIds.has(id))
-            .map(id => ({ id }));
+    const existingIds = new Set(items.map(item => item.id));
 
-        items = [...items, ...optimisticItems];
-    }
+    const optimisticItems = [...optimisticMoves]
+        .filter(([, target]) => target === type)
+        .map(([id]) => id)
+        .filter(id => !filter || id.includes(filter))
+        .filter(id => !existingIds.has(id))
+        .map(id => ({ id }));
+
+    items = [...items, ...optimisticItems];
 
     return {
         items,

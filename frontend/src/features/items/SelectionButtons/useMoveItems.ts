@@ -3,27 +3,26 @@ import type { Item } from 'shared';
 
 import { updateItem } from '../api/itemsApi';
 import { itemsQueryKeys } from '../api/itemsQueryKeys';
-import { useItemsStore } from '../useItemsStore';
+import { type ItemsPanelType, useItemsStore } from '../useItemsStore';
 
 export function useMoveItems() {
     const queryClient = useQueryClient();
 
-    const moveItems = async (ids: Set<Item['id']>, selected: boolean) => {
+    const moveItems = async (ids: Set<Item['id']>, target: ItemsPanelType) => {
         const movedIds = new Set(ids);
+        const selected = target === 'selected';
 
         const {
             available,
             selected: selectedPanel,
-            setOptimisticMove,
-            clearSelections: clearAll,
+            setOptimisticMoves,
+            clearOptimisticMoves,
+            clearSelections,
         } = useItemsStore.getState();
 
-        setOptimisticMove({
-            ids: movedIds,
-            selected,
-        });
+        setOptimisticMoves(movedIds, target);
 
-        if (selected) {
+        if (target === 'selected') {
             available.clear();
         } else {
             selectedPanel.clear();
@@ -36,11 +35,9 @@ export function useMoveItems() {
                 queryKey: itemsQueryKeys.all,
             });
         } catch {
-            clearAll();
-
-            // toast позже
+            clearSelections();
         } finally {
-            setOptimisticMove(null);
+            clearOptimisticMoves(movedIds, target);
         }
     };
 

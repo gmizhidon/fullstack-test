@@ -12,25 +12,22 @@ interface PanelState {
 interface ItemsState {
     available: PanelState;
     selected: PanelState;
-    optimisticMove: OptimisticMove | null;
-    setOptimisticMove: (move: OptimisticMove | null) => void;
+    optimisticMoves: Map<Item['id'], ItemsPanelType>;
+    setOptimisticMoves: (ids: Set<Item['id']>, target: ItemsPanelType) => void;
+    clearOptimisticMoves: (ids: Set<Item['id']>, target: ItemsPanelType) => void;
     clearSelections: () => void;
     optimisticAddedIds: Set<Item['id']>;
     addOptimisticItem: (id: Item['id']) => void;
     removeOptimisticItem: (id: Item['id']) => void;
 }
 
-export interface OptimisticMove {
-    ids: Set<Item['id']>;
-    selected: boolean;
-}
-
 export const useItemsStore = create<ItemsState>(set => {
     return {
         available: createPanelState('available'),
         selected: createPanelState('selected'),
-        optimisticMove: null,
-        setOptimisticMove: optimisticMove => set({ optimisticMove }),
+        optimisticMoves: new Map(),
+        setOptimisticMoves,
+        clearOptimisticMoves,
         clearSelections,
         optimisticAddedIds: new Set(),
         addOptimisticItem,
@@ -54,6 +51,32 @@ export const useItemsStore = create<ItemsState>(set => {
                 }),
             clear: () => set(state => ({ [type]: { ...state[type], selection: new Set() } })),
         };
+    }
+
+    function setOptimisticMoves(ids: Set<Item['id']>, target: ItemsPanelType) {
+        set(state => {
+            const optimisticMoves = new Map(state.optimisticMoves);
+
+            ids.forEach(id => {
+                optimisticMoves.set(id, target);
+            });
+
+            return { optimisticMoves };
+        });
+    }
+
+    function clearOptimisticMoves(ids: Set<Item['id']>, target: ItemsPanelType) {
+        set(state => {
+            const optimisticMoves = new Map(state.optimisticMoves);
+
+            ids.forEach(id => {
+                if (optimisticMoves.get(id) === target) {
+                    optimisticMoves.delete(id);
+                }
+            });
+
+            return { optimisticMoves };
+        });
     }
 
     function clearSelections() {
