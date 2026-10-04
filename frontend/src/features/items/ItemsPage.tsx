@@ -9,7 +9,9 @@ export function ItemsPage() {
             <h1 className={styles.title}>Items</h1>
             <div className={styles.panels}>
                 <ItemsPanel title="Available" type="available" />
+
                 <SelectionButtons />
+
                 <ItemsPanel title="Selected" type="selected" />
             </div>
         </main>

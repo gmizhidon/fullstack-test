@@ -10,12 +10,7 @@ interface ItemsListProps {
 }
 
 export function ItemsList({ type, filter }: ItemsListProps) {
-    const { data, isPending, isError } = useItems({
-        selected: type === 'selected',
-        filter,
-    });
-
-    const items = data?.pages.flatMap(page => page.items) ?? [];
+    const { items, isPending, isError } = useItems({ type, filter });
 
     if (isPending) {
         return <div>Loading...</div>;
